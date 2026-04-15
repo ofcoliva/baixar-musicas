@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "youtube downloader",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "youtube_downloader.py",
+            "console": "integratedTerminal",
+            "args": [
+                "https://www.youtube.com/watch?v=NkMTKGM-efw&list=PLnmwNDHEorITxGoIhCdusczEXCNntYC5s",
+                "--processNumber", "2",
+                "--musicPath", "./videos",
+                "--sleep-interval", "5",
+                "--max-sleep-interval", "30",
+                "--cookies", "youtube_cookies.txt"
+            ],
+            "justMyCode": true
+        }
+    ]
+}
