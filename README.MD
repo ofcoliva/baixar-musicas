@@ -1,6 +1,6 @@
 # Dependências
 
-Necessário yt-dlp e ffmpeg
+Necessário yt-dlp, ffmpeg, deno.
 
 comando para instalar yt-dlp
 ```powershell
@@ -12,6 +12,10 @@ comando para instalar ffmpeg
 winget install ffmpeg
 ```
 
+comando para instalar deno
+```powershell
+irm https://deno.land/install.ps1 | iex
+```
 
 Exemplo de uso para youtube
 ```powershell
