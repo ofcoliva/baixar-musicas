@@ -19,7 +19,7 @@ irm https://deno.land/install.ps1 | iex
 
 Exemplo de uso para youtube
 ```powershell
-python youtube_downloader.py "https://www.youtube.com/watch?v=NkMTKGM-efw&list=PLnmwNDHEorITxGoIhCdusczEXCNntYC5s" --processNumber 5 --musicPath "./yt_music"
+python youtube_downloader.py "https://www.youtube.com/watch?v=NkMTKGM-efw&list=PLnmwNDHEorITxGoIhCdusczEXCNntYC5s" --processNumber 2 --musicPath "./yt_music" --cookies "youtube_cookies.txt"
 ```
 
 Exemplo de uso para spotify
