@@ -72,7 +72,7 @@ class SpotifyDownloaderApp(App):
                 with Container(id="main_container"):
                     yield Label("[bold]Baixe suas musicas atraves do arquivo csv exportado", classes="titulo-aba")
                     with Horizontal(classes="input_row"):
-                        yield Input(placeholder="Caminho para o arquivo .csv", id="csv_input")
+                        yield Input(placeholder="Caminho para o arquivo .csv", value="./playlist.csv", id="csv_input")
                         yield Input(placeholder="Pasta de Saída", value="./musics", id="path_input")
 
                     with Horizontal(classes="input_row"):

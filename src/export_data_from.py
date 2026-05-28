@@ -41,7 +41,12 @@ class BasePlaylistExporter:
 class YouTubeExporter(BasePlaylistExporter):
     """Implementação específica para baixar metadados do YouTube."""
     def extrair_dados(self, playlist_url):
-        ydl_opts = {'extract_flat': 'in_playlist', 'quiet': True}
+        ydl_opts = {
+            'extract_flat': 'in_playlist',
+            'quiet': True,
+            'extractor_args': {'youtube': {'lang': ['pt']}}
+        }
+        
         self.log("[cyan]Acessando o YouTube...[/]")
 
         try:
