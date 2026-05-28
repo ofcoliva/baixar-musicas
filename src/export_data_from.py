@@ -1,0 +1,137 @@
+import csv
+import yt_dlp
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
+
+class BasePlaylistExporter:
+    """Classe base. Contém a lógica comum de escrever o CSV e atualizar a interface."""
+    def __init__(self, log_callback, progress_callback):
+        self.log = log_callback
+        self.progress = progress_callback
+
+    def extrair_dados(self, playlist_url):
+        """Método que as classes filhas (YouTube/Spotify) DEVEM sobrescrever."""
+        raise NotImplementedError("As subclasses devem implementar este método.")
+
+    def gerar_csv(self, playlist_url, output_csv="export.csv"):
+        # 1. Pede para a classe filha extrair os dados na sua própria plataforma
+        entries = self.extrair_dados(playlist_url)
+
+        if not entries:
+            self.log("[bold red]Nenhuma música encontrada ou ocorreu um erro.[/]")
+            return
+
+        # 2. Lógica universal para salvar os dados em CSV
+        headers = [
+            "Track Name", "Artist Name(s)", "Album Name", "Album Artist Name(s)", 
+            "Album Release Date", "Album Image URL", "Disc Number", "Track Number",
+            "Track Duration (ms)", "Popularity", "ISRC"
+        ]
+
+        with open(output_csv, mode='w', newline='', encoding='utf-8-sig') as f:
+            writer = csv.DictWriter(f, fieldnames=headers)
+            writer.writeheader()
+            for entry in entries:
+                writer.writerow(entry)
+                self.progress() # Avança a barra para cada linha salva no CSV
+
+        self.log(f"[bold green]Sucesso! Arquivo '{output_csv}' gerado com {len(entries)} músicas.[/]")
+
+
+class YouTubeExporter(BasePlaylistExporter):
+    """Implementação específica para baixar metadados do YouTube."""
+    def extrair_dados(self, playlist_url):
+        ydl_opts = {'extract_flat': 'in_playlist', 'quiet': True}
+        self.log("[cyan]Acessando o YouTube...[/]")
+
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(playlist_url, download=False)
+        except Exception as e:
+            self.log(f"[bold red]Erro no YouTube: {e}[/]")
+            return []
+
+        raw_entries = info.get('entries', [])
+        self.progress(total=len(raw_entries)) # Define o tamanho da barra
+
+        processed_entries = []
+        for entry in raw_entries:
+            if not entry:
+                continue
+
+            title = entry.get('title', 'Desconhecido')
+            uploader = str(entry.get('uploader', 'Desconhecido')).replace(" - Topic", "")
+            duration_ms = int((entry.get('duration') or 0) * 1000)
+            thumbnails = entry.get('thumbnails', [])
+            image_url = thumbnails[-1]['url'] if thumbnails else ""
+
+            processed_entries.append({
+                "Track Name": title,
+                "Artist Name(s)": uploader,
+                "Album Name": "YouTube Playlist",
+                "Album Artist Name(s)": uploader,
+                "Album Release Date": "",
+                "Album Image URL": image_url,
+                "Disc Number": "1", "Track Number": "1",
+                "Track Duration (ms)": duration_ms,
+                "Popularity": "50", "ISRC": ""
+            })
+            self.log(f"[dim]Lido (YouTube):[/] {title}")
+
+        return processed_entries
+
+
+class SpotifyExporter(BasePlaylistExporter):
+    """Implementação específica para baixar metadados ricos do Spotify."""
+    def __init__(self, log_callback, progress_callback, client_id, client_secret):
+        super().__init__(log_callback, progress_callback)
+        self.client_id = client_id
+        self.client_secret = client_secret
+
+    def extrair_dados(self, playlist_url):
+        self.log("[cyan]Acessando o Spotify...[/]")
+        try:
+            auth_manager = SpotifyClientCredentials(client_id=self.client_id, client_secret=self.client_secret)
+            sp = spotipy.Spotify(auth_manager=auth_manager)
+
+            # Pega as músicas contornando o limite de 100 por página do Spotify
+            results = sp.playlist_items(playlist_url)
+            tracks = results['items']
+            while results['next']:
+                results = sp.next(results)
+                tracks.extend(results['items'])
+
+        except Exception as e:
+            self.log(f"[bold red]Erro no Spotify: {e}[/]")
+            return []
+
+        self.progress(total=len(tracks)) # Define o tamanho da barra
+
+        processed_entries = []
+        for item in tracks:
+            track = item.get('track')
+            if not track:
+                continue
+
+            # Aqui obtemos os dados idênticos aos que o Exportify geraria nativamente!
+            artists = ", ".join([a['name'] for a in track.get('artists', [])])
+            album_artists = ", ".join([a['name'] for a in track.get('album', {}).get('artists', [])])
+            images = track.get('album', {}).get('images', [])
+            image_url = images[0]['url'] if images else ""
+
+            processed_entries.append({
+                "Track Name": track.get('name', ''),
+                "Artist Name(s)": artists,
+                "Album Name": track.get('album', {}).get('name', ''),
+                "Album Artist Name(s)": album_artists,
+                "Album Release Date": track.get('album', {}).get('release_date', ''),
+                "Album Image URL": image_url,
+                "Disc Number": track.get('disc_number', 1),
+                "Track Number": track.get('track_number', 1),
+                "Track Duration (ms)": track.get('duration_ms', 0),
+                "Popularity": track.get('popularity', 0),
+                "ISRC": track.get('external_ids', {}).get('isrc', '')
+            })
+            self.log(f"[dim]Lido (Spotify):[/] {track.get('name')}")
+
+        return processed_entries

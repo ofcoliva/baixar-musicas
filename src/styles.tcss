@@ -1,0 +1,37 @@
+SpotifyCredentialsModal {
+        align: center middle;
+        background: $background 50%; /* Fundo escurecido transparente */
+    }
+#modal-dialog {
+    padding: 1 2;
+    width: 60;
+    height: auto;
+    border: thick $primary;
+    background: $surface;
+}
+
+Screen { background: $surface; }
+#main_container { padding: 1;}
+.input_row { height: auto; margin-bottom: 1; }
+Input { width: 1fr; }
+Button { margin-left: 1; }
+
+/* Tamanho e centralização das duas barras */
+#progress_bar, #export_progress_bar { 
+    margin-bottom: 1; 
+    text-align: center; 
+    width: 80%; 
+    margin: 1; 
+}
+
+/* --- CORES DA BARRA DE DOWNLOAD --- */
+#progress_bar .bar--complete { color: cyan; }
+#progress_bar .bar--bar { color: #333333; }
+
+/* --- CORES DA BARRA DE EXPORTAÇÃO --- */
+#export_progress_bar .bar--complete { color: cyan; }
+#export_progress_bar .bar--bar { color: #333333; }
+
+RichLog { height: 1fr; border: solid $primary; background: $panel;}
+.titulo-aba { margin-bottom: 1; text-align: center; width: 100%;}
+

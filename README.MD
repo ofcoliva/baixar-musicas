@@ -1,29 +1,19 @@
-# Dependências
-
-Necessário yt-dlp, ffmpeg, deno.
-
-comando para instalar yt-dlp
-```powershell
-pip freeze -r requirements.txt
-```
-
-comando para instalar ffmpeg
+# Comando para instalar ffmpeg
 ```powershell
 winget install ffmpeg
 ```
 
-comando para instalar deno
+# Instalar UV
 ```powershell
-irm https://deno.land/install.ps1 | iex
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-Exemplo de uso para youtube
-```powershell
-python youtube_downloader.py "https://www.youtube.com/watch?v=NkMTKGM-efw&list=PLnmwNDHEorITxGoIhCdusczEXCNntYC5s" --processNumber 2 --musicPath "./yt_music" --cookies "youtube_cookies.txt"
+# Sincronizar Dependências
+```bash
+uv sync
 ```
 
-Exemplo de uso para spotify
-
-```powershell
-python3 spotify_dl.py songs.csv --processNumber 6 --musicPath "./spotify_musics"
+# Executar aplicacao
+```bash
+python main.py
 ```
