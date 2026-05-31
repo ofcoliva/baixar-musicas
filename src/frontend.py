@@ -52,7 +52,7 @@ class SpotifyCredentialsModal(ModalScreen[tuple[str, str]]):
         elif event.button.id == "btn_cancel_creds":
             self.dismiss((None, None))
 
-class SpotifyDownloaderApp(App):
+class BaixarMusicas(App):
     """Interface Gráfica do Spotify Downloader"""
 
     CSS_PATH = "styles.tcss"

@@ -1,5 +1,5 @@
-from src.frontend import SpotifyDownloaderApp
+from src.frontend import BaixarMusicas
 
 if __name__ == "__main__":
-    app = SpotifyDownloaderApp()
+    app = BaixarMusicas()
     app.run()
