@@ -90,9 +90,10 @@ class BaixarMusicas(App):
 
                     with Horizontal(classes="input_row"):
                         yield Select((("YouTube", "youtube"), ("Spotify", "spotify")), value="youtube", id="platform_select")
-                        yield Input(placeholder="URL da playlist", id="url_input")
+                        yield Input(placeholder="Qtd. Processos", value="4", type="integer", id="export_workers_input")
 
                     with Horizontal(classes="input_row"):
+                        yield Input(placeholder="URL da playlist", id="url_input")
                         yield Input(placeholder="Diretório do arquivo [.csv]", value="./playlist.csv", id="output_file_path")
                         yield Button("Iniciar Exportação", variant="primary", id="start_exportation_btn")
 
@@ -177,6 +178,7 @@ class BaixarMusicas(App):
             url = self.query_one("#url_input").value
             output_file = self.query_one("#output_file_path").value
             plataforma = self.query_one("#platform_select", Select).value
+            workers = int(self.query_one("#export_workers_input").value or 4)
 
             if not url:
                 self.safe_export_log("[bold red]Erro: Informe a URL da playlist![/]")
@@ -197,7 +199,8 @@ class BaixarMusicas(App):
                 self.run_exportation_in_background(
                     exporter_instance=exporter, 
                     url=url, 
-                    output_file_path=output_file
+                    output_file_path=output_file,
+                    workers=workers
                 )
 
             # Lógica de verificação do Spotify
@@ -274,10 +277,10 @@ class BaixarMusicas(App):
         self.call_from_thread(lambda: setattr(btn1, "disabled", False))
 
     @work(thread=True)
-    def run_exportation_in_background(self, exporter_instance, url, output_file_path):
+    def run_exportation_in_background(self, exporter_instance, url, output_file_path, workers):
         """Roda o extrator dinamicamente sem congelar a tela."""
 
-        exporter_instance.gerar_csv(url, output_file_path)
+        exporter_instance.gerar_csv(url, output_file_path, max_workers=workers)
 
         self.salvar_log_em_arquivo("exportacao", self.historico_export)
 

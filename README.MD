@@ -60,3 +60,7 @@ python main.py
 Logo após a execução do comando uma tela como a de baixo será exibida com parâmetros configurados por padrão.
 
 ![img1](./imgs/img1.svg)
+
+# Otimização com concorrencia explicada em uma imagem
+
+![img](./imgs/img2.svg)
