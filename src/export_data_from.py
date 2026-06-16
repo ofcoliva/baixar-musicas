@@ -2,6 +2,7 @@ import csv
 import yt_dlp
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class BasePlaylistExporter:
     """Classe base. Contém a lógica comum de escrever o CSV e atualizar a interface."""
@@ -40,50 +41,68 @@ class BasePlaylistExporter:
 
 class YouTubeExporter(BasePlaylistExporter):
     """Implementação específica para baixar metadados do YouTube."""
-    def extrair_dados(self, playlist_url):
-        ydl_opts = {
-            'extract_flat': 'in_playlist',
-            'quiet': True,
-            'extractor_args': {'youtube': {'lang': ['pt']}}
+def extrair_dados(self, playlist_url):
+    ydl_opts = {
+        'extract_flat': 'in_playlist',
+        'quiet': True,
+        'extractor_args': {'youtube': {'lang': ['pt']}}
+    }
+
+    self.log("[cyan]Acessando o YouTube...[/]")
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(playlist_url, download=False)
+    except Exception as e:
+        self.log(f"[bold red]Erro no YouTube: {e}[/]")
+        return []
+
+    raw_entries = [e for e in info.get('entries', []) if e]
+    playlist_name = info.get('title', 'YouTube Playlist')
+    self.progress(total=len(raw_entries))
+
+    def fetch_video(entry):
+        # Cada thread tem sua própria instância — yt_dlp não é thread-safe
+        with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
+            try:
+                video_info = ydl.extract_info(
+                    f"https://www.youtube.com/watch?v={entry['id']}",
+                    download=False
+                )
+            except Exception as e:
+                self.log(f"[yellow]Pulando vídeo {entry.get('id')}: {e}[/]")
+                self.progress()
+                return None
+
+        title    = video_info.get('title', 'Desconhecido')
+        uploader = str(video_info.get('uploader', 'Desconhecido')).replace(" - Topic", "")
+
+        upload_date = video_info.get('upload_date', '')
+        if upload_date:
+            upload_date = f"{upload_date[:4]}-{upload_date[4:6]}-{upload_date[6:]}"
+
+        duration_ms = int((video_info.get('duration') or 0) * 1000)
+        thumbnails  = video_info.get('thumbnails', [])
+        image_url   = thumbnails[-1]['url'] if thumbnails else ""
+
+        self.log(f"[dim]Lido (YouTube):[/] {title}")
+        self.progress()
+
+        return {
+            "Track Name":            title,
+            "Artist Name(s)":        uploader,
+            "Album Name":            playlist_name,
+            "Album Artist Name(s)":  uploader,
+            "Album Release Date":    upload_date,
+            "Album Image URL":       image_url,
+            "Disc Number":           "1",
+            "Track Number":          "1",
+            "Track Duration (ms)":   duration_ms,
+            "Popularity":            "50",
+            "ISRC":                  ""
         }
-        
-        self.log("[cyan]Acessando o YouTube...[/]")
 
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(playlist_url, download=False)
-        except Exception as e:
-            self.log(f"[bold red]Erro no YouTube: {e}[/]")
-            return []
-
-        raw_entries = info.get('entries', [])
-        self.progress(total=len(raw_entries)) # Define o tamanho da barra
-
-        processed_entries = []
-        for entry in raw_entries:
-            if not entry:
-                continue
-
-            title = entry.get('title', 'Desconhecido')
-            uploader = str(entry.get('uploader', 'Desconhecido')).replace(" - Topic", "")
-            duration_ms = int((entry.get('duration') or 0) * 1000)
-            thumbnails = entry.get('thumbnails', [])
-            image_url = thumbnails[-1]['url'] if thumbnails else ""
-
-            processed_entries.append({
-                "Track Name": title,
-                "Artist Name(s)": uploader,
-                "Album Name": "YouTube Playlist",
-                "Album Artist Name(s)": uploader,
-                "Album Release Date": "",
-                "Album Image URL": image_url,
-                "Disc Number": "1", "Track Number": "1",
-                "Track Duration (ms)": duration_ms,
-                "Popularity": "50", "ISRC": ""
-            })
-            self.log(f"[dim]Lido (YouTube):[/] {title}")
-
-        return processed_entries
+    
 
 
 class SpotifyExporter(BasePlaylistExporter):
