@@ -103,12 +103,13 @@ class YouTubeExporter(BasePlaylistExporter):
             }
 
         with ThreadPoolExecutor(max_workers) as executor:
-            futures = {executor.submit(fetch_video, entry): entry for entry in raw_entries}
-            results = [f.result() for f in as_completed(futures)]
+            '''
+            O executor.map lança as threads simultaneamente, mas devolve 
+            os resultados rigorosamente na mesma ordem de raw_entries.
+            '''
+            results = list(executor.map(fetch_video, raw_entries))
 
         return [r for r in results if r is not None]
-    
-
 
 class SpotifyExporter(BasePlaylistExporter):
     """Implementação específica para baixar metadados ricos do Spotify."""
