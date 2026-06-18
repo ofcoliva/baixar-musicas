@@ -45,7 +45,8 @@ class YouTubeExporter(BasePlaylistExporter):
         ydl_opts = {
             'extract_flat': 'in_playlist',
             'quiet': True,
-            'extractor_args': {'youtube': {'lang': ['pt']}}
+            'extractor_args': {'youtube': {'lang': ['pt']}},
+            'cookiefile': 'cookies.txt',
         }
 
         self.log("[cyan]Acessando o YouTube...[/]")
@@ -63,7 +64,15 @@ class YouTubeExporter(BasePlaylistExporter):
 
         def fetch_video(entry):
             # Cada thread tem sua própria instância — yt_dlp não é thread-safe
-            with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
+            video_opts = {
+                'quiet': True,
+                'cookiefile': 'cookies.txt',
+                'format': 'none',                 # Impede a busca por formatos de vídeo/áudio
+                'ignore_no_formats_error': True,  # Ignora o erro se o vídeo não tiver formatos baixáveis
+                'ignoreerrors': True
+            }
+
+            with yt_dlp.YoutubeDL(video_opts) as ydl:
                 try:
                     video_info = ydl.extract_info(
                         f"https://www.youtube.com/watch?v={entry['id']}",
@@ -73,6 +82,10 @@ class YouTubeExporter(BasePlaylistExporter):
                     self.log(f"[yellow]Pulando vídeo {entry.get('id')}: {e}[/]")
                     self.progress()
                     return None
+
+            if not video_info:
+                self.progress()
+                return None
 
             title    = video_info.get('title', 'Desconhecido')
             uploader = str(video_info.get('uploader', 'Desconhecido')).replace(" - Topic", "")
