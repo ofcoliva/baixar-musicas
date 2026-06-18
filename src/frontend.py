@@ -84,7 +84,7 @@ class BaixarMusicas(App):
                     yield RichLog(id="log", highlight=True, markup=True)
 
             # 2 aba
-            with TabPane("Exports", id="aba-export_tube"):
+            with TabPane("Exports", id="aba-export"):
                 with Container(id="main_container"):
                     yield Label("[bold]Exporte suas músicas para um arquivo .csv[/]", classes="titulo-aba")
 
