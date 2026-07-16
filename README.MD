@@ -32,15 +32,22 @@ cd baixar-musicas
 ```
 
 ## Instale o FFMPEG
+
+Windows
 ```powershell
 winget install ffmpeg
 ```
 
-## Istale o UV
-Ou use o PIP se preferir
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+Linux
+```bash
+sudo apt install ffmpeg
 ```
+
+
+## Instale o UV ou o gerênciador de pacotes Python de sua preferência
+
+Instruções para instalar o uv disponível no site [astral.sh](https://docs.astral.sh/uv/getting-started/installation)
+
 
 ## Sincronizar Dependências
 ```bash
