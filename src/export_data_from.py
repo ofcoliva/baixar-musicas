@@ -1,4 +1,6 @@
 import csv
+import os
+import tempfile
 import yt_dlp
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -42,11 +44,19 @@ class BasePlaylistExporter:
 class YouTubeExporter(BasePlaylistExporter):
     """Implementação específica para baixar metadados do YouTube."""
     def extrair_dados(self, playlist_url, max_workers):
+
+        cookie_file_path = 'cookies.txt'
+        cookie_data = ""
+
+        if os.path.exists(cookie_file_path):
+            with open(cookie_file_path, 'r', encoding='utf-8') as f:
+                cookie_data = f.read()
+
         ydl_opts = {
             'extract_flat': 'in_playlist',
             'quiet': True,
             'extractor_args': {'youtube': {'lang': ['pt']}},
-            'cookiefile': 'cookies.txt',
+            'cookiefile': cookie_file_path if cookie_data else None,
         }
 
         self.log("[cyan]Acessando o YouTube...[/]")
@@ -63,25 +73,38 @@ class YouTubeExporter(BasePlaylistExporter):
         self.progress(total=len(raw_entries))
 
         def fetch_video(entry):
+            if cookie_data:
+                # delete=False é necessário para podermos passar o caminho para o yt-dlp
+                # O Windows, por exemplo, não permite que outro processo abra um NamedTemporaryFile aberto
+                fd, temp_cookie_path = tempfile.mkstemp(suffix=".txt", text=True)
+                with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                    f.write(cookie_data)
             # Cada thread tem sua própria instância — yt_dlp não é thread-safe
             video_opts = {
                 'quiet': True,
-                'cookiefile': 'cookies.txt',
                 'format': 'none',                 # Impede a busca por formatos de vídeo/áudio
                 'ignore_no_formats_error': True,  # Ignora o erro se o vídeo não tiver formatos baixáveis
                 'ignoreerrors': True
             }
-
-            with yt_dlp.YoutubeDL(video_opts) as ydl:
-                try:
+            try:
+                with yt_dlp.YoutubeDL(video_opts) as ydl:
                     video_info = ydl.extract_info(
                         f"https://www.youtube.com/watch?v={entry['id']}",
                         download=False
                     )
-                except Exception as e:
-                    self.log(f"[yellow]Pulando vídeo {entry.get('id')}: {e}[/]")
-                    self.progress()
-                    return None
+
+            except Exception as e:
+                self.log(f"[yellow]Pulando vídeo {entry.get('id')}: {e}[/]")
+                self.progress()
+                return None
+
+            finally:
+                # apaga o arquivo temporário após o uso
+                if temp_cookie_path and os.path.exists(temp_cookie_path):
+                    try:
+                        os.remove(temp_cookie_path)
+                    except OSError:
+                        pass # Ignora erros de exclusão se o arquivo estiver preso no SO
 
             if not video_info:
                 self.progress()
