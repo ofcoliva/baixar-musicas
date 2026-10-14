@@ -184,3 +184,6 @@ logs
 musics
 *.csv
 old
+
+# Cookies do YouTube (contém credenciais de sessão - não commitar)
+cookies.txt

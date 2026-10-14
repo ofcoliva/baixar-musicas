@@ -59,6 +59,28 @@ uv sync
 .\.venv\Scripts\activate
 ```
 
+## Exporte os cookies do YouTube (recomendado)
+
+O YouTube pode bloquear ou limitar as requisições ao exportar ou baixar músicas, gerando erros como *"Sign in to confirm you're not a bot"*. Para reduzir esses bloqueios, exporte os cookies da sua conta do YouTube para um arquivo `cookies.txt` na raiz do projeto.
+
+O programa detecta esse arquivo automaticamente na raiz (mesma pasta do `main.py`).
+
+### Como exportar com a extensão "Get cookies.txt LOCALLY"
+
+1. Instale a extensão no seu navegador:
+   * [Chrome / Edge](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)
+   * [Firefox](https://addons.mozilla.org/en-US/firefox/addon/get-cookies-txt-locally)
+
+2. Faça login na sua conta do YouTube no navegador.
+
+3. Acesse [https://www.youtube.com](https://www.youtube.com) com a conta logada.
+
+4. Clique no ícone da extensão e selecione **Export** (formato Netscape / `cookies.txt`).
+
+5. Salve o arquivo baixado como **`cookies.txt`** na **raiz deste projeto**.
+
+`cookies.txt` contém as credenciais da sua sessão do YouTube. **Não compartilhe** esse arquivo e **não faça commit** dele — ele já está listado no `.gitignore`.
+
 ## Executar aplicacao
 ```bash
 python main.py
